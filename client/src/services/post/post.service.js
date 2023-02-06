@@ -11,6 +11,10 @@ class Post {
     this._http = http;
   }
 
+  async getReaction(userId, postId) {
+    return this._postReactionRepository.getPostReaction(userId, postId);
+  }
+
   getAllPosts(filter) {
     return this._http.load(`${this._apiPath}${ApiPath.POSTS}`, {
       method: HttpMethod.GET,
@@ -45,6 +49,29 @@ class Post {
           postId,
           isLike: true
         })
+      }
+    );
+  }
+
+  dislikePost(postId) {
+    return this._http.load(
+      `${this._apiPath}${ApiPath.POSTS}${PostsApiPath.REACT}`,
+      {
+        method: HttpMethod.PUT,
+        contentType: ContentType.JSON,
+        payload: JSON.stringify({
+          postId,
+          isDislike: true
+        })
+      }
+    );
+  }
+
+  checkReaction(postId) {
+    return this._http.load(
+      `${this._apiPath}${ApiPath.POSTS}${PostsApiPath.REACT}/${postId}`,
+      {
+        method: HttpMethod.GET
       }
     );
   }

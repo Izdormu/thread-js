@@ -19,22 +19,26 @@ class Post {
     });
   }
 
-  async setReaction(userId, { postId, isLike = true }) {
-    // define the callback for future use as a promise
-    const updateOrDelete = react => (react.isLike === isLike
-      ? this._postReactionRepository.deleteById(react.id)
-      : this._postReactionRepository.updateById(react.id, { isLike }));
-
+  async setReaction(userId, { postId, isLike = true, isDislike = false }) {
+    const updateOrDelete = react => {
+      if (react.isLike === isLike && react.isDislike === isDislike) {
+        return this._postReactionRepository.deleteById(react.id);
+      }
+      if (react.isLike === isLike) {
+        return this._postReactionRepository.updateById(react.id, { isDislike });
+      }
+      if (react.isDislike === isDislike) {
+        return this._postReactionRepository.updateById(react.id, { isLike });
+      }
+      return this._postReactionRepository.updateById(react.id, { isLike, isDislike });
+    };
     const reaction = await this._postReactionRepository.getPostReaction(
       userId,
       postId
     );
-
     const result = reaction
       ? await updateOrDelete(reaction)
-      : await this._postReactionRepository.create({ userId, postId, isLike });
-
-    // the result is an integer when an entity is deleted
+      : await this._postReactionRepository.create({ userId, postId, isLike, isDislike });
     return Number.isInteger(result)
       ? {}
       : this._postReactionRepository.getPostReaction(userId, postId);
